@@ -593,6 +593,9 @@ static int vlan_dev_init(struct net_device *dev)
 	dev->vlan_features = real_dev->vlan_features & ~NETIF_F_ALL_FCOE;
 	dev->hw_enc_features = vlan_tnl_features(real_dev);
 
+	if (netif_supports_nofcs(real_dev))
+		dev->priv_flags |= IFF_SUPP_NOFCS;
+
 	/* ipv6 shared card related stuff */
 	dev->dev_id = real_dev->dev_id;
 

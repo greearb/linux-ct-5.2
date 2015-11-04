@@ -190,8 +190,10 @@ static int validate_nla(const struct nlattr *nla, int maxtype,
 		goto out_err;
 
 	case NLA_FLAG:
-		if (attrlen > 0)
+		if (attrlen > 0) {
+			pr_err("validate-nla:  FLAG len is too large: %d\n", attrlen);
 			goto out_err;
+		}
 		break;
 
 	case NLA_BITFIELD32:
@@ -211,13 +213,16 @@ static int validate_nla(const struct nlattr *nla, int maxtype,
 
 		if (!minlen || memchr(nla_data(nla), '\0', minlen) == NULL) {
 			err = -EINVAL;
+			pr_err("validate-nla:  NUL-STRING parse error, minlen: %d\n", minlen);
 			goto out_err;
 		}
 		/* fall through */
 
 	case NLA_STRING:
-		if (attrlen < 1)
+		if (attrlen < 1) {
+			pr_err("validate-nla:  STRING too short, attrlen: %d\n", attrlen);
 			goto out_err;
+		}
 
 		if (pt->len) {
 			char *buf = nla_data(nla);
@@ -225,14 +230,20 @@ static int validate_nla(const struct nlattr *nla, int maxtype,
 			if (buf[attrlen - 1] == '\0')
 				attrlen--;
 
-			if (attrlen > pt->len)
+			if (attrlen > pt->len) {
+				pr_err("validate-nla:  STRING length err, attrlen: %d pt->len: %d\n",
+				       attrlen, pt->len);
 				goto out_err;
+			}
 		}
 		break;
 
 	case NLA_BINARY:
-		if (pt->len && attrlen > pt->len)
+		if (pt->len && attrlen > pt->len) {
+			pr_err("validate-nla:  BINARY length err, attrlen: %d pt->len: %d\n",
+			       attrlen, pt->len);
 			goto out_err;
+		}
 		break;
 
 	case NLA_NESTED:
@@ -241,8 +252,11 @@ static int validate_nla(const struct nlattr *nla, int maxtype,
 		 */
 		if (attrlen == 0)
 			break;
-		if (attrlen < NLA_HDRLEN)
+		if (attrlen < NLA_HDRLEN) {
+			pr_err("validate-nla:  Nested attrlen < hdrlen: %d < %d\n",
+			       attrlen, NLA_HDRLEN);
 			goto out_err;
+		}
 		if (pt->validation_data) {
 			err = nla_validate(nla_data(nla), nla_len(nla), pt->len,
 					   pt->validation_data, extack);
@@ -284,8 +298,11 @@ static int validate_nla(const struct nlattr *nla, int maxtype,
 		else if (pt->type != NLA_UNSPEC)
 			minlen = nla_attr_minlen[pt->type];
 
-		if (attrlen < minlen)
+		if (attrlen < minlen) {
+			pr_err("validate-nla:  DEFAULT (%d) lenght error, attrlen: %d  minlen: %d\n",
+			       pt->type, attrlen, minlen);
 			goto out_err;
+		}
 	}
 
 	/* further validation */

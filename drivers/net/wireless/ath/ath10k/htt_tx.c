@@ -532,8 +532,6 @@ void ath10k_htt_tx_destroy(struct ath10k_htt *htt)
 void ath10k_htt_tx_stop(struct ath10k_htt *htt)
 {
 
-	tasklet_kill(&htt->txrx_compl_task);
-
 	idr_for_each(&htt->pending_tx, ath10k_htt_tx_clean_up_pending, htt->ar);
 	idr_destroy(&htt->pending_tx);
 }
@@ -1242,7 +1240,8 @@ err:
 	sizeof(struct htt_data_tx_desc) + \
 	sizeof(struct ath10k_htc_hdr))
 
-static int ath10k_htt_tx_hl(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
+static int ath10k_htt_tx_hl(struct ath10k_htt *htt, struct ieee80211_vif *vif,
+			    enum ath10k_hw_txrx_mode txmode,
 			    struct sk_buff *msdu)
 {
 	struct ath10k *ar = htt->ar;

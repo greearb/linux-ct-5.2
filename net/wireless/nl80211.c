@@ -4579,8 +4579,10 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
 		return -EINVAL;
 
 	err = nl80211_parse_beacon(rdev, info->attrs, &params.beacon);
-	if (err)
+	if (err) {
+		pr_err("start-ap, parse-beacon failed: %d\n", err);
 		return err;
+	}
 
 	params.beacon_interval =
 		nla_get_u32(info->attrs[NL80211_ATTR_BEACON_INTERVAL]);
@@ -4700,8 +4702,8 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
 				return -EINVAL;
 			break;
 		default:
-			pr_err("parse-chandef, invalid chantype: %d\n",
-			       chantype);
+			pr_err("parse-chandef, invalid smps mode: %d\n",
+			       params.smps_mode);
 			return -EINVAL;
 		}
 	} else {
@@ -4710,14 +4712,14 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
 
 	params.pbss = nla_get_flag(info->attrs[NL80211_ATTR_PBSS]);
 	if (params.pbss && !rdev->wiphy.bands[NL80211_BAND_60GHZ]) {
-		pr_err("parse-chandef:  chandef is not valid\n");
+		pr_err("start-ap:  pbss and not 50Ghz\n");
 		return -EOPNOTSUPP;
 	}
 
 	if (info->attrs[NL80211_ATTR_ACL_POLICY]) {
 		params.acl = parse_acl_data(&rdev->wiphy, info);
 		if (IS_ERR(params.acl)) {
-			pr_err("parse-chandef: chandef is not usable.\n");
+			pr_err("start-apf: acl invalid.\n");
 			return PTR_ERR(params.acl);
 		}
 	}
@@ -6427,75 +6429,21 @@ static int nl80211_set_bss(struct sk_buff *skb, struct genl_info *info)
 	if (info->attrs[NL80211_ATTR_P2P_OPPPS]) {
 		u8 tmp;
 
-<<<<<<<
-		if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO)
-=======
-		tmp = nla_get_u8(info->attrs[NL80211_ATTR_STA_SUPPORT_P2P_PS]);
-		if (tmp >= NUM_NL80211_P2P_PS_STATUS) {
-			pr_err("%s: new-station failed, P2P_PS issue.\n", dev->name);
->>>>>>>
+		if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO) {
+			pr_err("%s: set-bss, not P2P_GO issue.\n", dev->name);
 			return -EINVAL;
-<<<<<<<
-=======
 		}
-
-		params.support_p2p_ps = tmp;
-	} else {
->>>>>>>
-<<<<<<<
 		tmp = nla_get_u8(info->attrs[NL80211_ATTR_P2P_OPPPS]);
 		params.p2p_opp_ps = tmp;
-=======
-		params.aid = nla_get_u16(info->attrs[NL80211_ATTR_PEER_AID]);
-	else
-		params.aid = nla_get_u16(info->attrs[NL80211_ATTR_STA_AID]);
-	if (!params.aid || params.aid > IEEE80211_MAX_AID) {
-		pr_err("%s: new-station failed, AID incorrect: %d\n", dev->name, params.aid);
-		return -EINVAL;
-	}
-
-	if (info->attrs[NL80211_ATTR_STA_CAPABILITY]) {
-		params.capability =
->>>>>>>
-<<<<<<<
 		if (params.p2p_opp_ps &&
-		    !(rdev->wiphy.features & NL80211_FEATURE_P2P_GO_OPPPS))
-=======
-	if (info->attrs[NL80211_ATTR_STA_PLINK_ACTION]) {
-		params.plink_action =
-			nla_get_u8(info->attrs[NL80211_ATTR_STA_PLINK_ACTION]);
-		if (params.plink_action >= NUM_NL80211_PLINK_ACTIONS) {
-			pr_err("%s: new-station failed, bad plink_action: %d\n",
-			       dev->name, params.plink_action);
->>>>>>>
+		    !(rdev->wiphy.features & NL80211_FEATURE_P2P_GO_OPPPS)) {
+			pr_err("%s: set-bss, opp-ps not supported.\n", dev->name);
 			return -EINVAL;
 		}
 	}
-<<<<<<<
-=======
 
-	err = nl80211_parse_sta_channel_info(info, &params);
-	if (err) {
-		pr_err("%s: new-station failed, parse-sta-channel-info failed: %d\n", dev->name, err);
-		return err;
-	}
-
-	err = nl80211_parse_sta_wme(info, &params);
-	if (err) {
-		pr_err("%s: new-station failed, parse-sta-wme failed: %d\n", dev->name, err);
-		return err;
-	}
->>>>>>>
-
-<<<<<<<
 	if (!rdev->ops->change_bss)
 		return -EOPNOTSUPP;
-=======
-	if (parse_station_flags(info, dev->ieee80211_ptr->iftype, &params)) {
-		pr_err("%s: new-station failed, parse-station-flags failed\n", dev->name);
-		return -EINVAL;
-	}
->>>>>>>
 
 	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
 	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO)

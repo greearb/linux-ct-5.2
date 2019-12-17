@@ -1224,11 +1224,13 @@ static void ath10k_htt_rx_h_signal(struct ath10k *ar,
 						  rxd->ppdu_start.rssi_chains[i].ext20_mhz,
 						  rxd->ppdu_start.rssi_chains[i].ext40_mhz,
 						  rxd->ppdu_start.rssi_chains[i].ext80_mhz);
-			/* ath10k_warn(ar, "rx-h-sig, chain[%i] pri20: %d ext20: %d  ext40: %d  ext80: %d\n",
-			 *	    i, rxd->ppdu_start.rssi_chains[i].pri20_mhz,
-			 *          rxd->ppdu_start.rssi_chains[i].ext20_mhz,
-			 *	    rxd->ppdu_start.rssi_chains[i].ext40_mhz,
-			 *          rxd->ppdu_start.rssi_chains[i].ext80_mhz);
+			/*
+			 * ath10k_warn(ar, "rx-h-sig, chain[%i] calculated-sum: %d pri20: %d ext20: %d  ext40: %d  ext80: %d\n",
+			 * 	     i, status->chain_signal[i],
+			 * 	     rxd->ppdu_start.rssi_chains[i].pri20_mhz,
+			 *           rxd->ppdu_start.rssi_chains[i].ext20_mhz,
+			 *	     rxd->ppdu_start.rssi_chains[i].ext40_mhz,
+			 *	     rxd->ppdu_start.rssi_chains[i].ext80_mhz);
 			 */
 
 			status->chains |= BIT(i);
@@ -1248,11 +1250,15 @@ static void ath10k_htt_rx_h_signal(struct ath10k *ar,
 			rxd->ppdu_start.rssi_comb;
 	}
 
-	/* ath10k_warn(ar, "rx-h-sig, signal: %d  chains: 0x%x  chain[0]: %d  chain[1]: %d  chain[2]: %d chain[3]: %d\n",
-	 *	    status->signal, status->chains, status->chain_signal[0],
+	/*
+	 * ath10k_warn(ar, "rx-h-sig, signal: %d  sig-ht: %d  chains: 0x%x  chain[0]: %d  chain[1]: %d  chain[2]: %d chain[3]: %d\n",
+	 *	    rxd->ppdu_start.rssi_comb + ATH10K_DEFAULT_NOISE_FLOOR,
+	 *          rxd->ppdu_start.rssi_comb_ht + ATH10K_DEFAULT_NOISE_FLOOR,
+	 *	    status->chains, status->chain_signal[0],
 	 *	    status->chain_signal[1], status->chain_signal[2],
 	 *          status->chain_signal[3]);
 	 */
+
 	status->flag &= ~RX_FLAG_NO_SIGNAL_VAL;
 }
 
